@@ -183,6 +183,4 @@ demo/
 
 
 ## Author 
-Natalie Huante 
-M.S. EECS | Chapman University
-CPSC 543 Final Project | Spring 2026 
+Natalie Huante | Chapman University | CPSC 543 Final Project | Spring 2026 
