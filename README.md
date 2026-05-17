@@ -14,7 +14,13 @@ The goal is to determine whether a restaurant is best described as:
 
 The project is designed as a focused domain-specific NLP classification task rather than a general chatbot or recommendation engine.
 
+
+## Author 
+Natalie Huante | Chapman University | CPSC 543 Final Project | Spring 2026 
+
+
 ---
+
 
 ## Problem Statement
 
@@ -182,5 +188,48 @@ demo/
 * matplotlib
 
 
-## Author 
-Natalie Huante | Chapman University | CPSC 543 Final Project | Spring 2026 
+## Local Environment Setup
+
+This project is designed to run locally on a laptop, as required by the final project guidelines.
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/nhuante/oc-restaurant-vibe-classifier.git
+cd oc-restaurant-vibe-classifier
+```
+
+### 2. Setup Virtual Environment
+
+Create virtual environment
+```bash 
+python -m venv venv
+```
+
+
+Activate it
+
+(Windows)
+```bash 
+venv\Scripts\activate
+```
+
+
+(Mac/Linux)
+```bash 
+source venv/bin/activate
+```
+
+
+### 3. Install Dependencies 
+
+```bash 
+pip install -r requirements.txt
+```
+
+
+### 4. Verify Setup 
+
+```bash 
+python -c "import torch, transformers, sklearn, pandas; print('Environment works')"
+```
