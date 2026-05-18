@@ -23,6 +23,7 @@ results/final_model/model.safetensors
 
 # datasets
 data/raw/
+data/processed/input_text_all_entries.csv
 
 # misc
 .ipynb_checkpoints/
