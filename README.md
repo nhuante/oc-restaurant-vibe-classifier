@@ -1,6 +1,6 @@
 # OC Restaurant Vibe Classifier
-This project focuses on fine-tuning a small local NLP model to classify the “vibe” or atmosphere of Orange County restaurants using restaurant descriptions and review snippets.
 
+This project aims to perform local fine-tuning of DistilBERT for multi-class restaurant vibe classification using Yelp restaurant reviews and metadata.
 
 The goal is to determine whether a restaurant is best described as:
 - date night
@@ -22,170 +22,170 @@ Natalie Huante | Chapman University | CPSC 543 Final Project | Spring 2026
 ---
 
 
-## Problem Statement
+## Project Overview
 
-Restaurant recommendations are often difficult because users care about more than cuisine alone. Social atmosphere, environment, and intended use heavily influence dining decisions.
+This project explores whether transformer-based NLP models can classify the atmosphere or "vibe" of restaurants using Yelp review text and restaurant category metadata. 
 
-For example:
-- A coffee shop may be ideal for studying but not for group dinners.
-- A restaurant may be excellent for date nights but not family-friendly.
-- Some locations are trendy social spots while others are quiet and casual.
+The system was trained locally using DistilBERT and compared against a traditional NLP baseline using TF-IDF and Logistic Regression. 
 
-The objective of this project is to train a local NLP model capable of understanding restaurant descriptions and predicting these vibe categories automatically.
-
+The project focuses on restaurants located in :
+* Santa Barbara
+* Goleta
+* Carpinteria
 ---
 
-## Example Inputs and Outputs
+## NP Task
 
-### Example 1
+This project frames restaurant vibe prediction as a supervised multi-class text classification task.
 
-#### Input
-"Dim lighting, craft cocktails, small plates, and a quiet outdoor patio."
+### Input
 
-#### Output
-```json
-{
-  "primary_vibe": "date_night",
-  "secondary_tags": ["upscale", "romantic"]
-}
+Combined restaurant metadata and Yelp review text.
+
+```
+Categories: Coffee & Tea, Cafes
+Review: Quiet cafe with students working on laptops and plenty of outlets.
 ```
 
 
-### Example 2
+### Output
 
-#### Input
-"Bright cafe with coffee, Wi-Fi, pastries, and students working on laptops."
+One of the following vibe labels:
 
-#### Output
-```json
-{
-  "primary_vibe": "study_spot",
-  "secondary_tags": ["casual", "quiet"]
-}
-```
-
-
-### Example 3
-
-#### Input
-"Open late with loud music, large booths, and shareable appetizers."
-
-#### Output
-```json
-{
-  "primary_vibe": "group_friendly",
-  "secondary_tags": ["late_night", "trendy"]
-}
-```
-
-
-## Main NLP Task 
-This project is frames as a supervised text classification problem. 
-
-The model receives:
-* restaurant descriptions
-* review snippets
-* restaurant atmosphere summaries
-Potential sources include:
-
-restaurant descriptions
-public review snippets
-manually written synthetic examples
-The model predicts:
-* a primary vibe category
-* optionsl secondary vibe tags for a deeper description
+* `study_spot`
+* `date_night`
+* `casual_hangout`
+* `family_friendly`
+* ``upscale`
+* `trendy`
+* `late_night`
 
 
 ## Dataset
-The dataset will consist of Orange County restaurant descriptions and review snippets collected from publicly available restaurant information and manually created examples.
 
-Each dataset example will contain:
-* restaurant text description
-* labeled vibe category
+### Source 
 
-Example dataset row:
-| text                                                   | label      |
-| ------------------------------------------------------ | ---------- |
-| "Modern interior with cocktails and intimate seating." | date_night |
+The dataset was constructed using the Yelp Open Dataset, which contains large-scale Yelp business, review, tip, and user data in JSON format, including restaurant metadata and full review text. 
 
-Potential sources include:
-* restaurant descriptions
-* public review snippets
-* manually written synthetic examples
+The dataset specifically pulled information from these two json files in the Open Dataset:
+* `yelp_businesses.json`
+* `yelp_reviews.json`
 
+### Construction 
 
-## Model
-The project will use a lightweight transformer model capable of running locally on consumer hardware.
+The pre-processing pipeline included the following steps:
 
-Potential models include:
+1. Loading Yelp business and review datasets
+2. Extracting restaurant-related businesses
+3. Filtering restaurants to Santa Barbara region cities 
+4. Removing irrelevant business and sprase entries
+5. Merging restaurant and reviews data 
+6. Construction NLP input text fields
+7. Creating manually balanced vibe label samples
 
-* DistilBERT
-* MiniLM
-* TinyBERT
+### Final Dataset 
 
-The model will be fine-tuned locally using Hugging Face Transformers and PyTorch.
+The final dataset contains roughly 200 labeled examples that are balanced across seven restaurant vibe lavel categories and split into train / validation / test sets. 
 
 
-# Fine Tuning Approach 
-The project will perform supervised fine-tuning for text classification.
+## Models
 
-The process includes:
-1. preprocessing restaurant text
-2. tokenization
-3. train/validation/test split
-4. local model fine-tuning
-5. evaluation and error analysis
+### Primary Model
 
+**DistilBERT** *(used for sequence classification)* is the main model used in this project. The model was fine-tuned, trained using Hugging Face Transformers, optimized using PyTorch, and evaluated using supervised classification metrics. 
 
-## Baselines 
-The fine-tuned model will be compared against:
-* the base pretrained model without fine-tuning
-* a simple keyword/rules-based classifier
+### Baseline Model 
 
-This comparison will help determine whether fine-tuning improves performance.
+A traditional machine learning baseline was implemented using TF-IDF vectorization and Logistic Regression classification. This was used to compare transformer performance against a classical NLP method. 
 
 
-## Evaluation Metrics
-The project will evaluate performance using:
-* accuracy 
-* precision
-* recall
-* F1-score
-* confusion matrix analysis
+## Experiments 
 
-Qualitative analysis will also be included to examine:
-* successful predictions
-* ambiguous examples 
-* common failure cases 
+Three DistilBERT fine-tuning experiments were tested. 
+
+| Model | Learning Rate | Epochs | Notes | 
+|---|---:|---:|---:|
+| 1 | 3e-5 | 8 | baseline fine-tuning version |
+| 2 | 2e-5 | 8 | added warmup and slower learning rate | 
+| 3 | 3e-5 | 10 | extended training period | 
 
 
-## Project Goals 
-The final system should:
-1. run locally on a laptop 
-2. classify restaurant vibes from natural language text 
-3. outperform simple baseline method s
-4. demonstrate effective domain-specific NLP fine-tuning 
+## Final Results 
+
+### Evaluation Metrics
+
+The models in this project were evaluated using several standard multi-class classification metrics:
+
+| Metric | Purpose | 
+| --- | --- | 
+| Accuracy | the percentage of correctly classified examples | 
+| Precision | how many predicted labels were correct | 
+| Recall | how many true labels were successfully identified | 
+| F1 Score | balances precision and recall into a single score | 
+
+Because restaurant vibe labels can overlap semantically, the weighted F1-score was considered one of the most important metrics for comparing model performance. 
+
+Additional metrics included 
+* confusion matrix analysis 
+* qualitative prediction examples
+* baseline comparison against TF-IDF + Logistic Regression
+
+
+### DistilBERT Chosen Model 
+
+| Metric | Score | 
+| --- | --- |
+| Accuracy | 0.67| 
+| Weighted F1 | 0.68| 
+
+### Baseline Model 
+
+| Metric | Score | 
+| --- | --- |
+| Accuracy | 0.67| 
+| Weighted F1 | 0.66|
+
+The fine-tuned DistilBERT model slightly outpeformed the TF-IDF baseline while demonstrating stronger contextual understanding on semantically overlapping vibe categories. 
 
 
 ## Repository Structure 
 
 ```
-data/
-notebooks/
-src/
-results/
-report/
-demo/
+oc-restaurant-vibe-classifier/
+│
+├── data/
+│   ├── raw/
+│   ├── processed/
+│   └── splits/
+│
+├── demo/ 
+|
+├── notebooks/
+│   ├── 01_dataset_creation.ipynb
+│   └── 02_preprocessing_and_training.ipynb
+│
+├── results/
+│   ├── confusion_matrix.png
+│   ├── classification_report.txt
+│   └── final_model/
+│
+├── report/
+│   └── report.tex
+|   └── report.pdf
+|
+├── results/
+|   └── final_model 
+|   └── model_output
+|   └── model_output_exp2
+|   └── model_output_exp3
+|   └── classification_report.txt
+|   └── confusion_matrix.png
+|   └── demopredictions.csv
+│
+├── requirements.txt
+├── .gitignore
+└── README.md
 ```
-
-
-## Tech Stack 
-* Python 
-* PyTorch
-* Hugging Face Transformers
-* scikit-learn
-* pandas
-* matplotlib
 
 
 ## Local Environment Setup
@@ -209,14 +209,11 @@ python -m venv venv
 
 Activate it
 
-(Windows)
-```bash 
-venv\Scripts\activate
-```
+```bash
+# (Windows Powershell) 
+.\venv\Scripts\Activate.ps1
 
-
-(Mac/Linux)
-```bash 
+# (Mac/Linux) 
 source venv/bin/activate
 ```
 
@@ -233,3 +230,37 @@ pip install -r requirements.txt
 ```bash 
 python -c "import torch, transformers, sklearn, pandas; print('Environment works')"
 ```
+
+### 5. Launch Jupyter Notebook 
+
+```bash 
+jupyter notebook
+```
+
+
+## Tech Stack 
+* Python 
+* PyTorch
+* Hugging Face Transformers
+* scikit-learn
+* pandas
+* Jupyter Notebook
+* matplotlib
+
+
+## Key Findings 
+* Traditional NLP baselines can perform competitively on small keyword-heavy datasets.
+* DistilBERT demonstrated stronger contextual understanding on overlapping vibe categories.
+* Restaurant atmosphere classification contains significant semantic subjectivity.
+* Small datasets can limit the advantages of transformer-based models.
+
+
+## Future Improvements 
+
+Potential future improvements include:
+* expanding the labeled dataset
+* adding more geographically diverse restaurants
+* incorporating menu descriptions and restaurant metadata
+* experimenting with larger transformer models
+* testing parameter-efficient fine-tuning methods such as LoRA
+* building a restaurant recommendation interface on top of the classifier

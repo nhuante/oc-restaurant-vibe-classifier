@@ -1,0 +1,265 @@
+
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{hyperref}
+\usepackage{enumitem}
+
+\title{Restaurant Vibe Classification with Locally Fine-Tuned DistilBERT}
+\author{Natalie Huante}
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+% Briefly summarize:
+% - the restaurant vibe classification problem
+% - Yelp Open Dataset usage
+% - DistilBERT fine-tuning
+% - baseline comparison
+% - final results and conclusions
+\end{abstract}
+
+\section{Introduction}
+
+% Suggested structure:
+% Paragraph 1:
+% - restaurant discovery challenges
+% - subjective restaurant atmosphere / “vibe”
+% - importance of reviews and user experiences
+%
+% Paragraph 2:
+% - NLP for understanding restaurant reviews
+% - transformer-based text classification
+%
+% Paragraph 3:
+% - project overview
+% - local fine-tuning goals
+%
+% Contributions:
+% - custom restaurant vibe dataset
+% - local DistilBERT fine-tuning
+% - baseline comparison
+% - semantic error analysis
+
+\section{Problem Definition}
+
+% Define the NLP task clearly:
+% Input:
+% - restaurant categories
+% - Yelp review text
+%
+% Output:
+% - one of seven vibe labels
+%
+% Mention:
+% - supervised multi-class text classification
+
+\subsection{Vibe Labels}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{ll}
+\toprule
+Label & Description \\
+\midrule
+study\_spot & Quiet cafes and work-friendly spaces \\
+late\_night & Bars, nightlife, and evening atmosphere \\
+casual\_hangout & Relaxed and informal dining \\
+family\_friendly & Restaurants suited for families and groups \\
+upscale & Elegant or fine dining experiences \\
+trendy & Modern, stylish, or social restaurants \\
+date\_night & Romantic or intimate dining atmosphere \\
+\bottomrule
+\end{tabular}
+\caption{Restaurant vibe classification labels}
+\end{table}
+
+\section{Dataset}
+
+\subsection{Data Source}
+
+% Describe Yelp Open Dataset:
+% - business.json
+% - review.json
+% - metadata fields
+% - review text
+
+\subsection{Dataset Filtering}
+
+% Describe:
+% - restaurant category filtering
+% - removal of irrelevant businesses
+% - geographic filtering
+% - Santa Barbara / Goleta / Carpinteria focus
+
+\subsection{Dataset Construction}
+
+% Explain:
+% - merging business metadata with reviews
+% - constructing input_text
+%
+% Example format:
+% Categories: Coffee & Tea, Cafes | Review: Quiet cafe with students studying.
+
+\subsection{Labeling Process}
+
+% Discuss:
+% - initial imbalance problem
+% - keyword candidate pools
+% - manual balancing strategy
+% - final 200-example dataset
+
+\subsection{Train / Validation / Test Split}
+
+% Include:
+% - 70/15/15 split
+% - stratified splitting
+% - balanced label distribution
+
+\section{Model and Fine-Tuning Method}
+
+\subsection{Model Selection}
+
+% Explain:
+% - DistilBERT selection
+% - local hardware feasibility
+% - compact transformer architecture
+% - computational efficiency
+
+\subsection{Tokenization}
+
+% Mention:
+% - DistilBertTokenizer
+% - padding
+% - truncation
+% - max sequence length
+
+\subsection{Fine-Tuning Method}
+
+% Explain:
+% - sequence classification head
+% - Hugging Face Trainer
+% - PyTorch
+% - local training
+%
+% IMPORTANT:
+% Mention that all trainable model parameters were updated.
+
+\subsection{Baseline Model}
+
+% Describe:
+% - TF-IDF vectorization
+% - Logistic Regression classifier
+% - purpose of baseline comparison
+
+\section{Experimental Setup}
+
+% Include:
+% - local hardware setup
+% - software libraries
+% - PyTorch
+% - Hugging Face Transformers
+% - scikit-learn
+
+\subsection{Training Configurations}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{llll}
+\toprule
+Experiment & Learning Rate & Epochs & Notes \\
+\midrule
+Model 1 & 3e-5 & 8 & Baseline fine-tuning \\
+Model 2 & 2e-5 & 8 & Warmup scheduling \\
+Model 3 & 3e-5 & 10 & Extended training duration \\
+\bottomrule
+\end{tabular}
+\caption{DistilBERT experiment configurations}
+\end{table}
+
+\section{Results}
+
+% Discuss:
+% - overall model performance
+% - best model selection
+% - baseline comparison
+% - generalization performance
+
+\subsection{Final Model Comparison}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+Model & Accuracy & Weighted F1 \\
+\midrule
+TF-IDF + Logistic Regression & 0.67 & 0.66 \\
+DistilBERT (Model 1) & 0.67 & 0.68 \\
+\bottomrule
+\end{tabular}
+\caption{Baseline vs. fine-tuned DistilBERT performance}
+\end{table}
+
+\subsection{Confusion Matrix}
+
+% Insert confusion matrix figure here
+
+\section{Error Analysis}
+
+% Discuss:
+% - semantically overlapping classes
+% - trendy vs date_night
+% - upscale vs trendy
+% - late_night vs trendy
+%
+% Mention:
+% - many errors were semantically reasonable
+% - contextual ambiguity
+
+\subsection{Qualitative Examples}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{p{4cm} p{2cm} p{2cm}}
+\toprule
+Input Summary & True Label & Predicted Label \\
+\midrule
+Quiet cafe with students studying & study\_spot & study\_spot \\
+Stylish cocktail lounge & trendy & date\_night \\
+Upscale wine bar & upscale & trendy \\
+Family breakfast diner & family\_friendly & family\_friendly \\
+\bottomrule
+\end{tabular}
+\caption{Example predictions from the final model}
+\end{table}
+
+\section{Ethical and Practical Considerations}
+
+% Discuss:
+% - subjectivity of vibe labels
+% - labeling bias
+% - geographic bias
+% - Yelp review bias
+% - limitations of small datasets
+
+\section{Conclusion}
+
+% Summarize:
+% - project goal
+% - local DistilBERT fine-tuning
+% - baseline comparison
+% - strongest findings
+%
+% Mention future work:
+% - larger datasets
+% - PEFT methods
+% - recommendation systems
+% - larger transformer architectures
+
+\end{document}

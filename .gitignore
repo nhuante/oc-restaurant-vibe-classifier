@@ -1,2 +1,29 @@
-.env
+# Python
 venv/
+__pycache__/
+*.pyc
+
+# HuggingFace / NLP outputs
+results/model_output/
+results/model_output_exp2/
+results/model_output_exp3/
+checkpoints/
+checkpoint-*/
+
+# training artifacts
+*.pt
+*.pth
+training_args.bin
+optimizer.pt
+scheduler.pt
+rng_state.pth
+
+# large model
+results/final_model/model.safetensors
+
+# datasets
+data/raw/
+
+# misc
+.ipynb_checkpoints/
+.cache/
