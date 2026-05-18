@@ -154,7 +154,7 @@ The fine-tuned DistilBERT model slightly outpeformed the TF-IDF baseline while d
 oc-restaurant-vibe-classifier/
 │
 ├── data/
-│   ├── raw/
+│   ├── raw/ # excluded from repo due to excessive file size, download locally from website linked 
 │   ├── processed/
 │   └── splits/
 │
@@ -164,23 +164,15 @@ oc-restaurant-vibe-classifier/
 │   ├── 01_dataset_creation.ipynb
 │   └── 02_preprocessing_and_training.ipynb
 │
-├── results/
-│   ├── confusion_matrix.png
-│   ├── classification_report.txt
-│   └── final_model/
-│
 ├── report/
 │   └── report.tex
 |   └── report.pdf
 |
 ├── results/
 |   └── final_model 
-|   └── model_output
-|   └── model_output_exp2
-|   └── model_output_exp3
 |   └── classification_report.txt
 |   └── confusion_matrix.png
-|   └── demopredictions.csv
+|   └── demo_predictions.csv
 │
 ├── requirements.txt
 ├── .gitignore
