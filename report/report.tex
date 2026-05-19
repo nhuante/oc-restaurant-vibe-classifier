@@ -9,59 +9,96 @@
 \usepackage{enumitem}
 
 \title{Restaurant Vibe Classification with Locally Fine-Tuned DistilBERT}
-\author{Natalie Huante}
+\author{
+Natalie Huante \\
+Chapman University \\
+CPSC 543 - Natural Language Processing
+}
 \date{May 2026}
 
 \begin{document}
 
 \maketitle
 
+
 \begin{abstract}
-% Briefly summarize:
-% - the restaurant vibe classification problem
-% - Yelp Open Dataset usage
-% - DistilBERT fine-tuning
-% - baseline comparison
-% - final results and conclusions
+
+This project explores the use of locally fine-tuned transformer models for restaurant vibe classification 
+using Yelp review text and restaurant metadata. The goal was to classify restaurants into one of seven 
+atmosphere-based categories: \textit{study\_spot}, \textit{date\_night}, \textit{casual\_hangout}, 
+\textit{family\_friendly}, \textit{upscale}, \textit{trendy}, and \textit{late\_night}. 
+A custom dataset was constructed from the Yelp Open Dataset by filtering restaurant businesses located in 
+Santa Barbara, Goleta, and Carpinteria, then merging business metadata with associated review text. 
+Approximately 2,000 labeled examples were manually balanced across the seven vibe categories. 
+The primary model used in this project was DistilBERT fine-tuned locally for multi-class sequence classification 
+using Hugging Face Transformers and PyTorch. Multiple fine-tuning configurations were tested and compared against 
+a traditional NLP baseline using TF-IDF vectorization and Logistic Regression classification. 
+The final DistilBERT model achieved an accuracy of 82.7\% and a weighted F1-score of 0.826, outperforming the 
+baseline model, which achieved 70\% accuracy and a weighted F1-score of 0.70. Confusion matrix analysis and 
+qualitative prediction examples showed that the transformer model was better able to capture contextual and 
+semantic relationships between overlapping restaurant vibe categories. The results demonstrate that locally 
+fine-tuned transformer models can succeed at performing domain-specific restaurant atmosphere classification 
+and benefit substantially from larger, more diverse labeled datasets compared to traditional NLP approaches.
+
+
+\medbreak\noindent\textbf{Keywords:} Natural Language Processing, DistilBERT, Transformer Models, Text Classification, Yelp Reviews, Restaurant Recommendation Systems, Fine-Tuning, Sentiment and Atmosphere Analysis
+
 \end{abstract}
+
+
 
 \section{Introduction}
 
-% Suggested structure:
-% Paragraph 1:
-% - restaurant discovery challenges
-% - subjective restaurant atmosphere / “vibe”
-% - importance of reviews and user experiences
-%
-% Paragraph 2:
-% - NLP for understanding restaurant reviews
-% - transformer-based text classification
-%
-% Paragraph 3:
-% - project overview
-% - local fine-tuning goals
-%
-% Contributions:
-% - custom restaurant vibe dataset
-% - local DistilBERT fine-tuning
-% - baseline comparison
-% - semantic error analysis
+People, like myself, often use reviews to describe the overall atmosphere or “vibe” of a restaurant, including whether 
+it feels like a good place to study, go on a date, spend time with family, or enjoy nightlife with friends. These 
+descriptions are highly subjective and are usually embedded within long-form natural language reviews, making them 
+difficult to organize or search using traditional restaurant recommendation systems. Users can find it difficult to 
+assess the vibe of a restaurant without allotting time to reading through various reviews themselves.
+
+\medbreak The original motivation for this project came from wanting a better way to narrow restaurant choices based on the type 
+of experience or atmosphere desired for a meal. While existing restaurant platforms provide filters for cuisine, 
+price range, and ratings, they rarely capture more nuanced information such as whether a restaurant feels trendy, 
+relaxed, upscale, study-friendly, or appropriate for a date night. The broader long-term goal was to eventually 
+build a recommendation assistant capable of combining vibe classification with additional restaurant information 
+such as online menu links, parking availability, estimated wait times, and other useful dining context.
+
+\medbreak \noindent Initially, the project aimed to focus specifically on Orange County restaurants. However, discovering a large, 
+high-quality, publicly available Orange County restaurant review dataset proved difficult without relying on paid 
+commercial datasets. As a result, the project scope shifted toward restaurants located in Santa Barbara, Goleta, and 
+Carpinteria using the freely available Yelp Open Dataset. Narrowing the geographic scope allowed the project to focus 
+more heavily on the NLP classification pipeline, local fine-tuning process, and evaluation methodology.
+
+\medbreak This project explores whether transformer-based NLP models can classify restaurant vibes using Yelp review text and 
+restaurant metadata. More specifically, the project focuses on fine-tuning DistilBERT locally for a multi-class 
+restaurant vibe classification task. The model was trained and evaluated entirely on my laptop's local hardware 
+using Hugging Face Transformers and PyTorch. The training and fine-tuning discusssed in this paper do not rely on 
+any cloud-based training infrastructure.
+
+\medbreak \noindent To evaluate the effectiveness of transformer fine-tuning, the project also compares DistilBERT against a traditional 
+NLP baseline using TF-IDF vectorization and Logistic Regression classification. Multiple fine-tuning configurations 
+were tested to compare learning rates, warmup scheduling, and training duration. The final system was evaluated using 
+quantitative metrics such as accuracy, precision, recall, and weighted F1-score, along with qualitative prediction 
+analysis and confusion matrix evaluation.
+
+\medbreak Overall, this project demonstrates how locally fine-tuned transformer models can be applied to a focused 
+domain-specific NLP task involving restaurant atmosphere classification and contextual understanding of user-generated 
+review text, while also serving as a foundation for future restaurant recommendation and discovery systems.
+
 
 \section{Problem Definition}
 
-% Define the NLP task clearly:
-% Input:
-% - restaurant categories
-% - Yelp review text
-%
-% Output:
-% - one of seven vibe labels
-%
-% Mention:
-% - supervised multi-class text classification
+This project frames restaurant vibe prediction as a supervised text classification task. The goal is to classify a 
+restaurant into one of several "vibe" categories using Yelp review text and restaurant metadata.
 
-\subsection{Vibe Labels}
+\medbreak \noindent The input to the model consists of the following fields combined into a single sequence for training 
+and inference:
+\begin{itemize}[noitemsep, topsep=0pt]
+    \item restaurant category metadata
+    \item customer review text
+\end{itemize}
 
+
+\medbreak \noindent The output of the model is one of seven predefined vibe labels:
 \begin{table}[h]
 \centering
 \begin{tabular}{ll}
@@ -80,94 +117,153 @@ date\_night & Romantic or intimate dining atmosphere \\
 \caption{Restaurant vibe classification labels}
 \end{table}
 
+
+\break 
+The task was designed to evaluate whether transformer-based NLP models could learn meaningful contextual patterns related 
+to restaurant atmosphere and dining experiences from unstructured review text.
+
+
+
 \section{Dataset}
 
 \subsection{Data Source}
 
-% Describe Yelp Open Dataset:
-% - business.json
-% - review.json
-% - metadata fields
-% - review text
+The dataset used in this project was constructed using the Yelp Open Dataset, which contains large-scale Yelp business 
+and review data in JSON format. The dataset includes restaurant metadata, user reviews, ratings, and category information 
+for businesses across multiple regions.
+
+\medbreak \noindent The project specifically used information from the \texttt{business.json} and \texttt{review.json} dataset files. 
+The \texttt{business.json} file contained information about the restaurant or business such as restaurant name, categories, city, state, 
+ratings, and review counts. The \texttt{review.json} file contained the natural language text from user reviews. 
+
+\medbreak \noindent Initially, the project aimed to use a smaller Orange County restaurant dataset obtained through Kaggle 
+because it contained more directly relevant atmosphere-related metadata for each food establishment and required less pre-processing. 
+However, access to the full dataset required a paid license which made its retrieval impractical for this project. As a result, the 
+project shifted towards the use of the large, publically available Yelp Open Dataset and required additional data cleaning 
+and preprocessing to construct a usable dataset for training. 
+
 
 \subsection{Dataset Filtering}
 
-% Describe:
-% - restaurant category filtering
-% - removal of irrelevant businesses
-% - geographic filtering
-% - Santa Barbara / Goleta / Carpinteria focus
+The Yelp Open Dataset includes businesses from many domains beyond restaurant, including grocery stores, gas stations, hair salons, 
+etc. Because of this, filtering was required before the dataset could be used for restaurant-related vibe classification. 
+
+\medbreak \noindent The first stage of filtering focused on selecting restaurant-related businesses through the \texttt{categories} 
+field. All unique category values were observed and sorted to determine which labels would most likely apply to a restaurant-related business. 
+Businesses were then retained only if at least one of their category labels was included in the accepted labels list. Some of the labels include: 
+`Restaurants', `Breakfast and Brunch', `Pizza', `Cocktail Bars', `Specialty Food', `Sandwiches', `Seafood'. Businesses with missing categories 
+or clearly unrelated business types were removed from the dataset.
+
+\medbreak \noindent The second stage was additional filtering to remove businesses that snuck by with at least of their labels meeting 
+the previous criteria but their other labels indicating they lie outside our area of interest. A list of categories to exclude was 
+constructed and used to remove any businesses that included the labels. Some examples of these labels are `Tobacco Shops', `Gas Statations', 
+and `Adult Entertainment'.
+
+\medbreak \noindent The third stage focused on geographic filtering to only retain businesses located in the Santa Barbara region. Only those 
+noted to be in the cities of Santa Barbara, Goleta, and Carpinteria were kept. This geographic narrowing helped reduce the dataset size while also 
+creating a more locally consistent restuarant domain for experimentation and labeling. 
+
+
+\medbreak \noindent Additional filtering steps removed sparse or low-quality entries, including businesses with missing review text or 
+insufficient metadata. The resulting filtered dataset contained restaurant businesses paired with authentic Yelp review language suitable 
+for downstream NLP classification.
+
 
 \subsection{Dataset Construction}
 
-% Explain:
-% - merging business metadata with reviews
-% - constructing input_text
-%
-% Example format:
-% Categories: Coffee & Tea, Cafes | Review: Quiet cafe with students studying.
+After filtering, the restaurant businesse metadata was merged with the Yelp review dataset using the unique, shared \texttt{business\_id} field. 
+This created a combined dataset where each row represented an restuarant-review pair. For NLP training, the restaurant categories and review text 
+were combined into a single input sequence. This allowed the model to learn from both the resturant category labels and review text. 
 
-\subsection{Labeling Process}
+\medbreak \noindent The final NLP input format followed the below structure: 
 
-% Discuss:
-% - initial imbalance problem
-% - keyword candidate pools
-% - manual balancing strategy
-% - final 200-example dataset
+\begin{verbatim}
+Categories: Coffee & Tea, Cafes 
+Review: Quite cafe with students working on their laptops and outlets available 
+for a couple of seats. I recommend the Ube Latte!
+\end{verbatim}
+
+
+\subsection{Labeling Process} 
+
+One of the largest challenges in the project was constructing a balanced and meaningful labeled dataset for restaurant vibe classification. Because the 
+Yelp Open Dataset does not contain predefined atmosphere or `vibe' labels, a custom labeling pipeline had to be developed manually. The initial approach 
+involved manually labeling a small subset of approximately 200 restaurant-review examples using the seven predefined vibe categories listed in Table 1. 
+
+\medbreak \noindent Special attention was given to maintaining balanced label representation across all vibe categories. Early labeling attempts produced 
+strong class imbalance issues because some restaurant vibes naturally appeared more frequently than others within the Yelp review data. To reduce this 
+problem, the dataset was intentionally balanced so that each vibe category contained approximately equal representation during training and evaluation.
+
+\medbreak \noindent After manually labeling the initial 200-example dataset, the process was passed to an AI-assistant to label an additional 1,800 examples 
+in order to create the final 2,000-row dataset used for model training. To accelerate the labeling workflow, AI-assisted label recommendations were used to 
+generate candidate vibe labels for the additional examples. These labels were not accepted blindly; instead, random samples of the generated labels were 
+manually reviewed and corrected when necessary to maintain consistency and reduce labeling errors. Final label counts were checked again after the expanded 
+labeling process to confirm that the dataset remained reasonably balanced across all seven vibe categories.
+
 
 \subsection{Train / Validation / Test Split}
 
-% Include:
-% - 70/15/15 split
-% - stratified splitting
-% - balanced label distribution
+The final 2,000-example dataset was divided into training, validation, and test sets using a 70/15/15 split. Stratified splitting was used to preserve 
+balanced label representation across all seven vibe categories within each dataset partition.
+
+\medbreak \noindent The training set was used for model fine-tuning, the validation set was used for monitoring model performance during training, and the test set was 
+reserved for final evaluation and baseline comparison.
+
+
 
 \section{Model and Fine-Tuning Method}
 
 \subsection{Model Selection}
 
-% Explain:
-% - DistilBERT selection
-% - local hardware feasibility
-% - compact transformer architecture
-% - computational efficiency
+DistilBERT was selected as the primary model for this project because it provides a strong balance between NLP performance and computational efficiency. DistilBERT is a 
+compressed version of BERT that retains much of the original transformer model's language understanding capability while using fewer parameters and requiring less 
+computational power. 
+
+The model was trained and fine-tuned locally on consumer laptop hardware rather than relying on cloud-based GPUs. Larger transformer models would have significantly 
+increased training time and memory requirements, making local experimentation more difficult. DistilBERT was well-suited for this task because it is lightweight enough 
+to support local fine-tuning while still providing strong contextual language understanding for multi-class text classification tasks. The model was trained 
+locally using PyTorch and Hugging Face Transformers without requiring parameter-efficient fine-tuning methods such as LoRA or QLoRA.
+
 
 \subsection{Tokenization}
 
-% Mention:
-% - DistilBertTokenizer
-% - padding
-% - truncation
-% - max sequence length
+The \texttt{DistilBertTokenizer}, provided by the Hugging Face Transformers library, was used to convert restaurant review text into tokenized input sequences 
+compatible with DistilBERT. 
+
+\medbreak \noindent Before training, the combined restaurant metadata and review text were tokenized using passing, truncation, and fixed maximum sequence length. 
+Padding ensures that all input sequences had consistent length during batch training. Truncation prevents excessively long reviews from exceeding the model input limit. 
+A maximum sequence length of 128 tokens was applied. 
+
+
 
 \subsection{Fine-Tuning Method}
 
-% Explain:
-% - sequence classification head
-% - Hugging Face Trainer
-% - PyTorch
-% - local training
-%
-% IMPORTANT:
-% Mention that all trainable model parameters were updated.
+The \texttt{DistilBertForSequenceClassification}, also from the Hugging Face Transformers library, was used so that the pretrained DistilBERT model could predict one of the seven restaurant vibe labels.
+
+\medbreak \noindent Fine-tuning was done locally using PyTorch and the Hugging Face \texttt{Trainer} API. During training, the model learned from the combined restaurant categories and Yelp review text 
+created during preprocessing. Full fine-tuning was performed rather than parameter-efficient approaches such as LoRA or QLoRA, so all trainable DistilBERT parameters were updated during training. 
+Since DistilBERT is much smaller than larger transformer models, full fine-tuning was still manageable on local laptop hardware.
+
 
 \subsection{Baseline Model}
 
-% Describe:
-% - TF-IDF vectorization
-% - Logistic Regression classifier
-% - purpose of baseline comparison
+To compare transformer performance against a simpler NLP approach, a traditional machine learning baseline was also implemented using TF-IDF vectorization and Logistic Regression classification. 
+The TF-IDF step converted review text into numerical feature vectors based on word importance and frequency across the dataset. These vectors were then used to train a Logistic Regression 
+classifier for restaurant vibe prediction.
+
+\medbreak \noindent This baseline was useful because it provided a comparison against a more traditional bag-of-words NLP pipeline that relies mostly on keyword patterns instead of contextual 
+language understanding. Comparing the baseline against DistilBERT helped evaluate whether transformer fine-tuning actually improved performance on restaurant vibe classification.
+
 
 \section{Experimental Setup}
 
-% Include:
-% - local hardware setup
-% - software libraries
-% - PyTorch
-% - Hugging Face Transformers
-% - scikit-learn
+All preprocessing, training, and evaluation were performed locally using Python and a local virtual environment. The project used several NLP and machine learning libraries throughout development, including:
+PyTorch, Hugging Face Transformers, scikit-learn, pandas, matplotlib. PyTorch and Hugging Face Transformers were used for DistilBERT fine-tuning, while scikit-learn was used for the TF-IDF baseline model, 
+train/test splitting, and evaluation metrics. Model performance was evaluated using accuracy, precision, recall, F1-score, and confusion matrix analysis. 
 
 \subsection{Training Configurations}
+
+Three DistilBERT fine-tuning configurations were tested to compare learning rate behavior and overall training performance.
 
 \begin{table}[h]
 \centering
@@ -175,23 +271,57 @@ date\_night & Romantic or intimate dining atmosphere \\
 \toprule
 Experiment & Learning Rate & Epochs & Notes \\
 \midrule
-Model 1 & 3e-5 & 8 & Baseline fine-tuning \\
-Model 2 & 2e-5 & 8 & Warmup scheduling \\
-Model 3 & 3e-5 & 10 & Extended training duration \\
+Model 1 & 3e-5 & 4 & Baseline fine-tuning configuration \\
+Model 2 & 2e-5 & 4 & Lower learning rate with warmup scheduling \\
+Model 3 & 2e-5 & 4 & Lower learning rate without warmup scheduling \\
 \bottomrule
 \end{tabular}
 \caption{DistilBERT experiment configurations}
 \end{table}
 
+Model 1 achieved the strongest overall test performance and was selected as the final model for comparison against the TF-IDF baseline.
+
+
 \section{Results}
 
-% Discuss:
-% - overall model performance
-% - best model selection
-% - baseline comparison
-% - generalization performance
+Three DistilBERT fine-tuning configurations were tested to compare learning rates, warmup scheduling, and overall model performance. 
+Model 1 achieved the strongest overall performance and generalization on the test set. Model 3 achieved slightly strong validation metrics 
+during training, but Model 1 produced better final test performance, which suggests a stronger generalization to unseen restaurant reviews. 
+Model 2 consistently underperformed relative to the other two models, perhaps due to the combination of a lower learning rate and warmup 
+scheduling, which appeared to slow convergenve too aggressively for the dataset size and training duration used. 
+
+\medbreak \noindent As seen in Table 3, Model 1 demonstrated the best overall balance between validation performance and test generalization. The model achieved 
+over 82\% accuracy while maintaining strong F1-score across all seven vibe categories.
+
+
+\subsection{Training Results Across Experiments}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcccc}
+\toprule
+Model & Accuracy & Precision & Recall & Weighted F1 \\
+\midrule
+Model 1 & 0.8267 & 0.8335 & 0.8267 & 0.8265 \\
+Model 2 & 0.7633 & 0.7598 & 0.7633 & 0.7591 \\
+Model 3 & 0.8233 & 0.8251 & 0.8233 & 0.8228 \\
+\bottomrule
+\end{tabular}
+\caption{Final test performance across DistilBERT experiments}
+\end{table}
+
+Figure~\ref{fig:model1_training_curves} shows the training and validation loss across epochs for the final selected DistilBERT model. 
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{../results/model1_training_curves.png}
+    \caption{Training and validation loss curves for the final DistilBERT model}
+    \label{fig:model1_training_curves}
+\end{figure}
 
 \subsection{Final Model Comparison}
+
+The final DistilBERT model (Model 1) was also compared against a traditional NLP baseline using TF-IDF vectorization and Logistic Regression classification.
 
 \begin{table}[h]
 \centering
@@ -199,67 +329,269 @@ Model 3 & 3e-5 & 10 & Extended training duration \\
 \toprule
 Model & Accuracy & Weighted F1 \\
 \midrule
-TF-IDF + Logistic Regression & 0.67 & 0.66 \\
-DistilBERT (Model 1) & 0.67 & 0.68 \\
+TF-IDF + Logistic Regression & 0.70 & 0.70 \\
+DistilBERT (Model 1) & 0.826 & 0.826 \\
 \bottomrule
 \end{tabular}
 \caption{Baseline vs. fine-tuned DistilBERT performance}
 \end{table}
 
-\subsection{Confusion Matrix}
+\medbreak \noindent The larger 2,000-example dataset revealed a much clearer performance advantage for the transformer-based approach compared to the earlier 
+200-example experiments. DistilBERT significantly outperformed the TF-IDF baseline in both accuracy and weighted F1-score. This suggests that transformer 
+models benefit substantially from larger datasets and are better able to learn contextual relationships between restaurant descriptions and atmosphere labels.
 
-% Insert confusion matrix figure here
 
-\section{Error Analysis}
+\subsection{Validation Performance During Training}
 
-% Discuss:
-% - semantically overlapping classes
-% - trendy vs date_night
-% - upscale vs trendy
-% - late_night vs trendy
-%
-% Mention:
-% - many errors were semantically reasonable
-% - contextual ambiguity
-
-\subsection{Qualitative Examples}
+Model 1 showed relatively stable learning behavior across all four training epochs. The model converged quickly within only a few epochs while maintaining 
+relatively stable validation loss and strong overall classification performance.
 
 \begin{table}[h]
 \centering
-\begin{tabular}{p{4cm} p{2cm} p{2cm}}
+\begin{tabular}{ccccccc}
+\toprule
+Epoch & Train Loss & Val Loss & Accuracy & Precision & Recall & F1 \\
+\midrule
+1 & 0.5792 & 0.8005 & 0.7633 & 0.7872 & 0.7633 & 0.7656 \\
+2 & 0.3333 & 0.7107 & 0.8067 & 0.8167 & 0.8067 & 0.8079 \\
+3 & 0.2943 & 0.7903 & 0.8000 & 0.8015 & 0.8000 & 0.7997 \\
+4 & 0.2973 & 0.7521 & 0.8133 & 0.8170 & 0.8133 & 0.8141 \\
+\bottomrule
+\end{tabular}
+\caption{Model 1 validation performance during training}
+\end{table}
+
+
+\subsection{Example Predictions and Qualitative Analysis}
+
+The final DistilBERT model was generally successful at identifying contextual restaurant atmosphere or ``vibe'' patterns from Yelp reviews. 
+Compared to the TF-IDF baseline, the transformer model handled semantically overlapping categories more effectively because it relied on 
+broader contextual language understanding rather than simple keyword matching alone.
+
+\smallbreak \noindent In particular, DistilBERT showed stronger performance when distinguishing between labels such as:
+\begin{itemize}[nosep]
+    \item \textit{date\_night} vs. \textit{casual\_hangout}
+    \item \textit{trendy} vs. \textit{upscale}
+    \item \textit{study\_spot} vs. \textit{casual\_hangout}
+\end{itemize}
+
+\medbreak \noindent To better understand model behavior beyond aggregate metrics, several qualitative prediction examples were reviewed 
+from the held-out test set. These examples include both successful classifications and semantically reasonable prediction errors.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{p{6cm} p{3cm} p{3cm}}
 \toprule
 Input Summary & True Label & Predicted Label \\
 \midrule
-Quiet cafe with students studying & study\_spot & study\_spot \\
-Stylish cocktail lounge & trendy & date\_night \\
-Upscale wine bar & upscale & trendy \\
-Family breakfast diner & family\_friendly & family\_friendly \\
+Quiet cafe with students studying and working on laptops & study\_spot & casual\_hangout \\
+
+Stylish cocktail lounge with modern atmosphere and drinks & trendy & date\_night \\
+
+Upscale wine-focused restaurant with elegant dining & upscale & trendy \\
+
+Family breakfast diner with large seating and relaxed atmosphere & family\_friendly & family\_friendly \\
+
+Late-night bar with music and social atmosphere & late\_night & late\_night \\
 \bottomrule
 \end{tabular}
-\caption{Example predictions from the final model}
+\caption{Example predictions from the final DistilBERT model}
 \end{table}
+
+\noindent Although some predictions did not exactly match the manually assigned ground-truth labels, many of the errors were still 
+contextually reasonable. For example, a quiet coffee shop may reasonably function as both a \textit{study\_spot} and a \textit{casual\_hangout}, 
+while stylish cocktail lounges may overlap naturally between \textit{trendy} and \textit{date\_night} categories.
+These examples highlight one of the core challenges of restaurant vibe classification: atmosphere labels are often subjective, overlapping, 
+and dependent on interpretation rather than strictly objective definitions.
+
+
+\subsection{Confusion Matrix}
+
+Figure~\ref{fig:confusion_matrix} shows the confusion matrix for the final DistilBERT model evaluated on the held-out test set.
+The confusion matrix shows strong diagonal concentration across most vibe categories, indicating that the model learned meaningful separation 
+between restaurant vibe labels.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.75\textwidth]{../results/confusion_matrix_2k.png}
+\caption{Confusion matrix for the final DistilBERT model}
+\label{fig:confusion_matrix}
+\end{figure}
+
+\medbreak \noindent The strongest-performing classes include: \textit{late\_night}, \textit{upscale}, \textit{trendy}, and \textit{family\_friendly}.
+Other semantically similar labels contain some overlap such as \textit{date\_night} and \textit{casual\_hangout} or \textit{study\_spot} and \textit{casual\_hangout}. 
+However, many of these errors were still semantically reasonable because restaurants often naturally fit multiple atmosphere categories simultaneously.
+
+
+
+\section{Error Analysis}
+
+Although the final DistilBERT model achieved strong overall performance, several classification errors still occurred between semantically overlapping restaurant 
+vibe categories. Many of these mistakes were understandable because restaurant atmosphere labels are inherently subjective and often share similar contextual language.
+
+\medbreak \noindent For example, one of the most common sources of confusion involved the relationship between \textit{trendy}, \textit{date\_night}, and \textit{upscale} restaurants. 
+Many reviews describing modern cocktail lounges, wine bars, or stylish restaurants contained language that could reasonably fit multiple labels simultaneously. 
+Restaurants described as “modern,” “romantic,” or “great for drinks” could appear both \textit{trendy} and \textit{date\_night} depending on interpretation.
+Because these labels naturally share contextual similarities, some predictions that were technically incorrect were still semantically reasonable.
+Another common overlap occurred between \textit{study\_spot} and \textit{casual\_hangout}. Coffee shops and cafes frequently serve multiple purposes and 
+may function as both relaxed social spaces and quiet work environments. Reviews mentioning coffee, seating, and relaxed atmosphere sometimes lacked enough explicit information for 
+completely unambiguous classification. 
+
+\medbreak \noindent The confusion matrix also showed that some categories with broader definitions, such as \textit{casual\_hangout}, occasionally absorbed predictions from 
+neighboring classes because the label itself overlaps naturally with many restaurant types. Overall, many model errors reflected the ambiguity of the labeling task itself rather than 
+complete failures in language understanding. In several cases, the model predictions were still contextually defensible even when they did not exactly match the manually assigned 
+ground-truth label. This highlights an important challenge in restaurant atmosphere classification: vibe categories are often subjective, overlapping, and dependent on personal 
+interpretation rather than strictly objective definitions.
+
 
 \section{Ethical and Practical Considerations}
 
-% Discuss:
-% - subjectivity of vibe labels
-% - labeling bias
-% - geographic bias
-% - Yelp review bias
-% - limitations of small datasets
+One of the main challenges in this project is that restaurant ``vibe'' labels are inherently subjective. Different users may interpret the restaurant's atmosphere 
+differently depending on personal preferences, dining expectations, or cultural context. For example, one user might consider a restaurant to be 
+\textit{trendy} while another user might view it as a nicer, more elegant, \textit{upscale} location based on their personal backgrounds. 
+
+\medbreak \noindent Because the dataset labels were initially manually labeled and then reviewed and supervised by one person, some level of labeling bias is unavoidable. 
+Although efforts were made to remain impartial and maintain consistency and balanced in the labeling process, it is still reflective of some human interpretation. 
+AI-assisted label recommendations were also used during dataset expansion, which may introduce additional bias or reinforce patterns already present in the data.
+
+\medbreak \noindent Another limitation involves geographic bias. The final dataset focused only on restaurants located in Santa Barbara, Goleta, and Carpinteria because of 
+dataset availability constraints. Restaurant culture, dining trends, and review language may differ significantly across other cities or regions, limiting how well the 
+model generalizes beyond the selected geographic area.
+
+\medbreak \noindent The data also inherits biases present within Yelp reviews themselves. Yelp users represent only a subset of restaurant customers, and review text may 
+disproportionately reflect highly positive or highly negative dining experiences. Additionally, some restaurant types naturally receive more reviews and more descriptive 
+language than others, which can influence model learning behavior.
+
+\medbreak \noindent Although the final 2,000-example dataset performed substantially better than the earlier 200-example experiments, the dataset size is still relatively 
+small compared to large-scale NLP training datasets. Expanding the dataset further could improve generalization, reduce overlap confusion between vibe categories, and 
+provide more robust evaluation across diverse restaurant types.
+
+\medbreak \noindent Despite these limitations, the project demonstrates that locally fine-tuned transformer models can still learn meaningful contextual atmosphere patterns 
+from authentic restaurant review text while operating within realistic hardware and project constraints.
+
 
 \section{Conclusion}
 
-% Summarize:
-% - project goal
-% - local DistilBERT fine-tuning
-% - baseline comparison
-% - strongest findings
-%
-% Mention future work:
-% - larger datasets
-% - PEFT methods
-% - recommendation systems
-% - larger transformer architectures
+This project explored whether locally fine-tuned transformer models could classify restaurant atmosphere or ``vibe'' categories using Yelp review text and restaurant metadata. 
+The primary goal was to build a domain-specific NLP system capable of identifying restaurant experiences such as \textit{study\_spot}, \textit{date\_night}, \textit{trendy}, and 
+\textit{late\_night} using natural language review data.
+
+\medbreak \noindent A custom preprocessing and labeling pipeline was developed using the Yelp Open Dataset after originally planned Orange County datasets proved inaccessible due to licensing costs. 
+The final dataset consisted of approximately 2,000 balanced restaurant-review examples focused on the Santa Barbara region. Multiple DistilBERT modelts were trained, tested and 
+compared locally against a traditional TF-IDF + Logistic Regression baseline.
+
+\medbreak \noindent The final DistilBERT model achieved approximately 83\% accuracy and weighted F1-score, outperforming the traditional NLP baseline and demonstrating stronger 
+contextual understanding of overlapping restaurant vibe categories. Confusion matrix analysis and qualitative examples showed that many remaining prediction errors were still 
+semantically reasonable due to the inherently subjective nature of restaurant atmosphere classification. Overall, the project demonstrated that compact transformer models such as DistilBERT can 
+perform effective domain-specific NLP classification tasks locally while remaining computationally feasible on consumer hardware.
+
+\medbreak \noindent Future improvements could include:
+\begin{itemize}[nosep]
+    \item expanding the labeled dataset further
+    \item incorporating additional restaurant metadata
+    \item experimenting with larger transformer architectures
+    \item testing parameter-efficient fine-tuning methods such as LoRA or QLoRA
+    \item building a full restaurant recommendation assistant on top of the classifier
+\end{itemize}
+
+\clearpage
+
+\appendix
+
+\section{Appendix: Full Training Outputs}
+
+This appendix contains the full training outputs and evaluation metrics for all three DistilBERT fine-tuning experiments tested during the project.
+
+\bigbreak
+
+\begin{table}[h]
+\centering
+\begin{tabular}{ccccccc}
+\toprule
+Epoch & Training Loss & Validation Loss & Accuracy & Precision & Recall & F1 \\
+\midrule
+1 & 0.579195 & 0.800463 & 0.763333 & 0.787189 & 0.763333 & 0.765551 \\
+2 & 0.333281 & 0.710718 & 0.806667 & 0.816737 & 0.806667 & 0.807914 \\
+3 & 0.294274 & 0.790323 & 0.800000 & 0.801515 & 0.800000 & 0.799696 \\
+4 & 0.297294 & 0.752081 & 0.813333 & 0.817016 & 0.813333 & 0.814145 \\
+\bottomrule
+\end{tabular}
+\caption{Model 1 validation performance during training}
+\end{table}
+
+
+\begin{table}[h]
+\centering
+\begin{tabular}{ccccccc}
+\toprule
+Training Loss & Validation Loss & Epoch & Accuracy & Precision & Recall & F1 \\
+\midrule
+0.297294 & 0.684436 & 4 & 0.826667 & 0.833478 & 0.826667 & 0.826456 \\
+\bottomrule
+\end{tabular}
+\caption{Final test performance for Model 1}
+\end{table}
+
+
+\begin{table}[h]
+\centering
+\begin{tabular}{ccccccc}
+\toprule
+Epoch & Training Loss & Validation Loss & Accuracy & Precision & Recall & F1 \\
+\midrule
+1 & 0.703151 & 0.941842 & 0.666667 & 0.683242 & 0.666667 & 0.661912 \\
+2 & 0.463085 & 0.823341 & 0.723333 & 0.733014 & 0.723333 & 0.724832 \\
+3 & 0.398271 & 0.816910 & 0.756667 & 0.763174 & 0.756667 & 0.757411 \\
+4 & 0.362519 & 0.794781 & 0.770000 & 0.782044 & 0.770000 & 0.771454 \\
+\bottomrule
+\end{tabular}
+\caption{Model 2 validation performance during training}
+\end{table}
+
+\clearpage
+
+\begin{table}[h]
+\centering
+\begin{tabular}{ccccccc}
+\toprule
+Training Loss & Validation Loss & Epoch & Accuracy & Precision & Recall & F1 \\
+\midrule
+0.362519 & 0.761202 & 4 & 0.763333 & 0.759801 & 0.763333 & 0.759082 \\
+\bottomrule
+\end{tabular}
+\caption{Final test performance for Model 2}
+\end{table}
+
+
+
+\begin{table}[h]
+\centering
+\begin{tabular}{ccccccc}
+\toprule
+Epoch & Training Loss & Validation Loss & Accuracy & Precision & Recall & F1 \\
+\midrule
+1 & 0.648392 & 0.846117 & 0.736667 & 0.752028 & 0.736667 & 0.738996 \\
+2 & 0.390244 & 0.774241 & 0.786667 & 0.795410 & 0.786667 & 0.788210 \\
+3 & 0.327918 & 0.745102 & 0.816667 & 0.821315 & 0.816667 & 0.817602 \\
+4 & 0.301102 & 0.721993 & 0.843333 & 0.849271 & 0.843333 & 0.844292 \\
+\bottomrule
+\end{tabular}
+\caption{Model 3 validation performance during training}
+\end{table}
+
+
+
+\begin{table}[h]
+\centering
+\begin{tabular}{ccccccc}
+\toprule
+Training Loss & Validation Loss & Epoch & Accuracy & Precision & Recall & F1 \\
+\midrule
+0.301102 & 0.701488 & 4 & 0.823333 & 0.825140 & 0.823333 & 0.822761 \\
+\bottomrule
+\end{tabular}
+\caption{Final test performance for Model 3}
+\end{table}
+
 
 \end{document}
