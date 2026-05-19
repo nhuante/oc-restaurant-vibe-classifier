@@ -56,7 +56,7 @@ One of the following vibe labels:
 * `date_night`
 * `casual_hangout`
 * `family_friendly`
-* ``upscale`
+* `upscale`
 * `trendy`
 * `late_night`
 
