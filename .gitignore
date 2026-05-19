@@ -28,3 +28,4 @@ data/processed/input_text_all_entries.csv
 # misc
 .ipynb_checkpoints/
 .cache/
+.mp4
